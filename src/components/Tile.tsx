@@ -1,17 +1,25 @@
 import React from 'react'
 
-type TileProps = {
-    color: 'black' | 'white'
+export type TileType = {
+    color: string
     position: { x: number, y: number }
+    src: null | string
 }
 
-export interface TileType extends TileProps {}
+interface TileProps extends TileType {
+    onClick: React.Dispatch<React.SetStateAction<TileType['position'] | null>>
+    debug: boolean
+}
 
-function Tile({ color, position }: TileProps): JSX.Element {
+function Tile({ color, position, src, onClick, debug }: TileProps): JSX.Element {
 
 
     return <>
-        <div style={{ left: `${position.x * 7.5}rem`, top: `${position.y * 7.5}rem`, backgroundColor: color } } className={`h-[7.5rem] w-[7.5rem] absolute bg-${color === 'white' ? 'white' : 'black'}`}></div>
+        <div onClick={() => onClick(src ? position : null)} style={{ left: `${position.x * 7.5}rem`, top: `${position.y * 7.5}rem`, backgroundColor: color } } className={`h-[7.5rem] w-[7.5rem] absolute`}>
+            <div className='h-full w-full flex justify-center items-center'>
+                {debug && <span className='absolute top-0 w-full'>x: {position.y}<br/> y: {position.x}</span>}{src && <img width={'70%'} src={src} />}
+            </div>
+        </div>
     </>
 }
 
