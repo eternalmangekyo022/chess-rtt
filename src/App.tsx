@@ -19,7 +19,7 @@ import KingWhite from './pieces/king-white.png';
 
 const colors = { light: '#EDEED1', dark: '#7FA650' }
 
-type position = { x: number, y: number }
+type position = TileType['position']
 
 
 /**
@@ -100,7 +100,7 @@ function App(): JSX.Element {
 
   return <>
     <div className='relative w-screen h-screen flex justify-center items-center bg-orange-200'>
-      <input type="checkbox" checked={debug} onChange={() => setDebug(prev => !prev)} className='w-[5rem] fixed aspect-square cursor-pointer z-50 top-10 left-40' />
+      {/* <input type="checkbox" checked={debug} onChange={() => setDebug(prev => !prev)} className='w-[5rem] fixed aspect-square cursor-pointer z-50 top-10 left-40' /> */}
       {debug && <span className='absolute w-20 aspect-square z-10 top-10 left-10'>x: {selected[1]?.position.y} y: {selected[1]?.position.x}</span>}
       <div className='relative h-[60rem] w-[60rem]' /* board */>
         { tiles.map(i => <Tile size={i.size} src={i.src} color={i.color} position={i.position} debug={debug} onClick={setSelected}/>) }
