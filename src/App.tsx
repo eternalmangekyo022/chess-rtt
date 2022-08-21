@@ -105,7 +105,11 @@ function App(): JSX.Element {
   }, [selected])
 
   return <>
-    <div className={`relative w-screen h-screen flex justify-center items-center ${theme === 1 ? 'bg-orange-200' : 'bg-gray-900'}`}>
+    <motion.div
+    className={`relative w-screen h-screen flex justify-center items-center`}
+    animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : 'rgb(17, 24, 39)' }}
+    transition={{ duration: .3 }}
+    >
       <div onClick={() => setTheme(theme === -1 ? 1 : -1)} className='absolute w-12 h-12 right-24 top-12 flex justify-center items-center cursor-pointer' /* container for animation */>
         <motion.div
         className='w-12'
@@ -121,7 +125,8 @@ function App(): JSX.Element {
       <div className='relative h-[60rem] w-[60rem]' /* board */>
         { tiles.map(i => <Tile size={i.size} src={i.src} color={i.color} position={i.position} debug={false} onClick={setSelected}/>) }
       </div>
-    </div>
+    {/* <motion.div className={`absolute w-screen h-screen top-10 -z-100 ${theme === 1 ? 'bg-orange-200' : 'bg-gray-900'}`}></motion.div> */}
+    </motion.div>
   </>
 }
 export default App
