@@ -51,7 +51,6 @@ function getPiece({ x, y }: position): string | null {
     else if([2, 5].includes(y)) return BishopBlack
     return y === 3 ? QueenBlack : KingBlack
   }
-
   return null
 }
 
