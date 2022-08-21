@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Tile, { TileType } from './components/Tile';
-import { isEqual } from 'lodash'
+import Moon from './components/Moon'
+import Sun from './components/Sun'
+import { isEqual } from 'lodash';
+import { atom, useAtom } from 'jotai';
+import { motion } from 'framer-motion'
 import './App.css';
 
 import QueenBlack from './pieces/queen-black.png';
@@ -18,6 +22,8 @@ import BishopWhite from './pieces/bishop-white.png';
 import KingWhite from './pieces/king-white.png';
 
 const colors = { light: '#EDEED1', dark: '#7FA650' }
+
+const _theme = atom< 1 | -1 >(1)
 
 type position = TileType['position']
 
@@ -56,12 +62,13 @@ function getPiece({ x, y }: position): string | null {
 
 function App(): JSX.Element {
   const [tiles, setTiles] = useState<TileType[]>([]);
-  const [debug, setDebug] = useState<boolean>(false);
+  /* const [debug, setDebug] = useState<boolean>(false); */
   /* const [selected, setSelected] = useState<TileType['position'] | null>(null); */
   const [selected, _setSelected] = usePrevious<TileType | null>(null);
   const setSelected = useCallback((val: TileType | null) => {
     _setSelected(val)
   }, [])
+  const [theme, setTheme] = useAtom(_theme)
 
   useEffect(() => {
     const temp: TileType[] = []
@@ -98,11 +105,21 @@ function App(): JSX.Element {
   }, [selected])
 
   return <>
-    <div className='relative w-screen h-screen flex justify-center items-center bg-orange-200'>
+    <div className={`relative w-screen h-screen flex justify-center items-center ${theme === 1 ? 'bg-orange-200' : 'bg-gray-900'}`}>
+      <div onClick={() => setTheme(theme === -1 ? 1 : -1)} className='absolute w-12 h-12 right-24 top-12 flex justify-center items-center cursor-pointer' /* container for animation */>
+        <motion.div
+        className='w-12'
+        key={theme}
+        initial={{x: theme * 50}}
+        animate={{x: 0}}
+        >
+          {theme === 1 ? <Sun/> : <Moon/>}
+        </motion.div>
+      </div>
       {/* <input type="checkbox" checked={debug} onChange={() => setDebug(prev => !prev)} className='w-[5rem] fixed aspect-square cursor-pointer z-50 top-10 left-40' /> */}
-      {debug && <span className='absolute w-20 aspect-square z-10 top-10 left-10'>x: {selected[1]?.position.y} y: {selected[1]?.position.x}</span>}
+      {/* {debug && <span className='absolute w-20 aspect-square z-10 top-10 left-10'>x: {selected[1]?.position.y} y: {selected[1]?.position.x}</span>} */}
       <div className='relative h-[60rem] w-[60rem]' /* board */>
-        { tiles.map(i => <Tile size={i.size} src={i.src} color={i.color} position={i.position} debug={debug} onClick={setSelected}/>) }
+        { tiles.map(i => <Tile size={i.size} src={i.src} color={i.color} position={i.position} debug={false} onClick={setSelected}/>) }
       </div>
     </div>
   </>
