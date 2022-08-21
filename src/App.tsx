@@ -4,7 +4,7 @@ import Moon from './components/Moon';
 import Sun from './components/Sun';
 import { isEqual } from 'lodash';
 import { atom, useAtom } from 'jotai';
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import './App.css';
 
 import QueenBlack from './pieces/queen-black.png';
@@ -21,9 +21,11 @@ import PawnWhite from './pieces/pawn-white.png';
 import BishopWhite from './pieces/bishop-white.png';
 import KingWhite from './pieces/king-white.png';
 
-const colors = { light: '#EDEED1', dark: '#7FA650' }
+const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] }
 
-const _theme = atom< 1 | -1 >(1)
+const _theme = atom< 1 /* light */ | -1 /* dark */ >(1)
+export { _theme }
+
 
 type position = TileType['position']
 
@@ -37,7 +39,7 @@ type position = TileType['position']
 * piece.src = getPiece(tiles[0].position)
  * 
  */
-function getPiece({ x, y }: position): string | null {
+async function getPiece({ x, y }: position): Promise<string | null> {
 
 
   if(x === 1 || x === 6) /* pawn */ {
@@ -60,10 +62,12 @@ function getPiece({ x, y }: position): string | null {
   return null
 }
 
+async function getColor(__theme: number, { x, y }: position): Promise<string> {
+  return __theme === 1 ? /* light theme */(x % 2 === 0 ? (y % 2 === 0 ? colors.light[0] : colors.light[1]) : (y % 2 === 0 ? colors.light[1] : colors.light[0])) : /* non-light theme */(x % 2 === 0 ? (y % 2 === 0 ? colors.dark[0] : colors.dark[1]): (y % 2 === 0 ? colors.dark[1] : colors.dark[0]))
+}
+
 function App(): JSX.Element {
   const [tiles, setTiles] = useState<TileType[]>([]);
-  /* const [debug, setDebug] = useState<boolean>(false); */
-  /* const [selected, setSelected] = useState<TileType['position'] | null>(null); */
   const [selected, _setSelected] = usePrevious<TileType | null>(null);
   const setSelected = useCallback((val: TileType | null) => {
     _setSelected(val)
@@ -72,15 +76,27 @@ function App(): JSX.Element {
 
   useEffect(() => {
     const temp: TileType[] = []
+
+    const addTile = async({ x, y }: position): Promise<number> => temp.push({ color: await getColor(theme, { x, y }), position: { x, y }, src: await getPiece({ x: y, y: x }) })
+
     for(let y = 0; y < 8; y++) {
       for(let x = 0; x < 8; x++) {
-        const piece = getPiece({ x: y, y: x })
-        temp.push({ color: x % 2 === 0 ? (y % 2 === 0 ? colors.light : colors.dark) : (y % 2 === 0 ? colors.dark : colors.light), position: { x, y }, src: piece })
+        addTile({ x, y })
       }
       /* temp.push({ color: row % 2 === 0 ? 'white' : 'black', position: { x: row % 8, y: Math.floor(row / 8) } }) */
     }
     setTiles(temp)
   }, [])
+
+  useEffect(() => {
+    if(tiles.length < 64) return
+    const temp = [...tiles];
+    for(let i = 0; i < temp.length; i++) {
+      getColor(theme, temp[i].position)
+        .then(res => temp[i].color = res)
+    }
+    setTiles(temp)
+  }, [theme])
 
   useEffect(() => {
     if(isEqual(selected[0], selected[1])) {
@@ -111,21 +127,21 @@ function App(): JSX.Element {
     transition={{ duration: .3 }}
     >
       <div onClick={() => setTheme(theme === -1 ? 1 : -1)} className='absolute w-12 h-12 right-24 top-12 flex justify-center items-center cursor-pointer' /* container for animation */>
-        <motion.div
-        className='w-12'
-        key={theme}
-        initial={{x: theme * 50}}
-        animate={{x: 0}}
-        >
-          {theme === 1 ? <Sun/> : <Moon/>}
-        </motion.div>
+        <AnimatePresence>
+          <motion.div
+          className='w-12 absolute'
+          key={theme}
+          initial={{x: theme * -50}}
+          animate={{ x: 0 }}
+          exit={{ x: theme * -50, opacity: 0 }}
+          >
+            {theme === 1 ? <Sun/> : <Moon/>}
+          </motion.div>
+        </AnimatePresence>
       </div>
-      {/* <input type="checkbox" checked={debug} onChange={() => setDebug(prev => !prev)} className='w-[5rem] fixed aspect-square cursor-pointer z-50 top-10 left-40' /> */}
-      {/* {debug && <span className='absolute w-20 aspect-square z-10 top-10 left-10'>x: {selected[1]?.position.y} y: {selected[1]?.position.x}</span>} */}
       <div className='relative h-[60rem] w-[60rem]' /* board */>
         { tiles.map(i => <Tile size={i.size} src={i.src} color={i.color} position={i.position} debug={false} onClick={setSelected}/>) }
       </div>
-    {/* <motion.div className={`absolute w-screen h-screen top-10 -z-100 ${theme === 1 ? 'bg-orange-200' : 'bg-gray-900'}`}></motion.div> */}
     </motion.div>
   </>
 }
@@ -144,4 +160,18 @@ function usePrevious<T>(initial: T | null): [[null | T, null | T], (val: T) => v
   }
 
   return [state, mutateState]
+}
+
+/**
+ * ##### Can not use with lists or objects
+ * Works with booleans, strings and numbers
+*/
+function useToggle<T, U=T>(initial: [T, U]): [T | U, () => void] {
+  const [state, setState] = useState<T | U>(initial[0]);
+
+  function toggle(): void {
+    setState(prev => prev === initial[0] ? initial[1] : initial[0])
+  }
+
+  return [state, toggle]
 }
