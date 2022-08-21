@@ -21,6 +21,16 @@ const colors = { light: '#EDEED1', dark: '#7FA650' }
 
 type position = { x: number, y: number }
 
+
+/**
+ * This function helps you determine what type of piece belongs to
+ * a specific position at the start of the round.
+ * @param coordinates row coordinate of tile to search for, that are best when destructured, each coord can be 7 at max.
+ * @example
+* let piece: { src: string | null } = { src: null }
+* piece.src = getPiece(tiles[0].position)
+ * 
+ */
 function getPiece({ x, y }: position): string | null {
 
 
@@ -45,7 +55,6 @@ function getPiece({ x, y }: position): string | null {
   return null
 }
 
-
 function App(): JSX.Element {
   const [tiles, setTiles] = useState<TileType[]>([]);
   const [debug, setDebug] = useState<boolean>(false);
@@ -67,13 +76,16 @@ function App(): JSX.Element {
     setTiles(temp)
   }, [])
 
-
   useEffect(() => {
+    if(isEqual(selected[0], selected[1])) {
+      return
+    }
     if(selected[0]?.src) {
       const temp = [...tiles]
       for(let i = 0; i < temp.length; i++) {
         if(isEqual(temp[i].position, selected[1]?.position)) {
           temp[i].src = selected[0].src
+          temp[i].size = 70
           for(let j = 0; j < temp.length; j++) {
             if(isEqual(temp[j].position, selected[0]?.position)) temp[j].src = null
           }
@@ -91,13 +103,17 @@ function App(): JSX.Element {
       <input type="checkbox" checked={debug} onChange={() => setDebug(prev => !prev)} className='w-[5rem] fixed aspect-square cursor-pointer z-50 top-10 left-40' />
       {debug && <span className='absolute w-20 aspect-square z-10 top-10 left-10'>x: {selected[1]?.position.y} y: {selected[1]?.position.x}</span>}
       <div className='relative h-[60rem] w-[60rem]' /* board */>
-        { tiles.map(i => <Tile src={i.src} color={i.color} position={i.position} debug={debug} onClick={setSelected}/>) }
+        { tiles.map(i => <Tile size={i.size} src={i.src} color={i.color} position={i.position} debug={debug} onClick={setSelected}/>) }
       </div>
     </div>
   </>
 }
 export default App
 
+
+/**
+ * sefesf
+*/
 function usePrevious<T>(initial: T | null): [[null | T, null | T], (val: T) => void] {
   /* [prev, current], because append works similarly */
   const [state, setState] = useState<[null | T, null | T]>([null, initial]);
