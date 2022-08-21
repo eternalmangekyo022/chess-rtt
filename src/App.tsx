@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Tile, { TileType } from './components/Tile';
+import { isEqual } from 'lodash'
 import './App.css';
 
 import QueenBlack from './pieces/queen-black.png';
@@ -48,7 +49,11 @@ function getPiece({ x, y }: position): string | null {
 function App(): JSX.Element {
   const [tiles, setTiles] = useState<TileType[]>([]);
   const [debug, setDebug] = useState<boolean>(false);
-  const [selected, setSelected] = useState<TileType['position'] | null>(null);
+  /* const [selected, setSelected] = useState<TileType['position'] | null>(null); */
+  const [selected, _setSelected] = usePrevious<TileType | null>(null);
+  const setSelected = useCallback((val: TileType | null) => {
+    _setSelected(val)
+  }, [])
 
   useEffect(() => {
     const temp: TileType[] = []
@@ -63,11 +68,28 @@ function App(): JSX.Element {
   }, [])
 
 
+  useEffect(() => {
+    if(selected[0]?.src) {
+      const temp = [...tiles]
+      for(let i = 0; i < temp.length; i++) {
+        if(isEqual(temp[i].position, selected[1]?.position)) {
+          temp[i].src = selected[0].src
+          for(let j = 0; j < temp.length; j++) {
+            if(isEqual(temp[j].position, selected[0]?.position)) temp[j].src = null
+          }
+          break
+        }
+      }
+      setTiles(temp)
+      setSelected(null)
+    }
+    /* console.log(selected[0]?.position, selected[1]?.position) */
+  }, [selected])
 
   return <>
     <div className='relative w-screen h-screen flex justify-center items-center bg-orange-200'>
       <input type="checkbox" checked={debug} onChange={() => setDebug(prev => !prev)} className='w-[5rem] fixed aspect-square cursor-pointer z-50 top-10 left-40' />
-      {debug && <span className='absolute w-20 aspect-square z-10 top-10 left-10'>x: {selected?.y} y: {selected?.x}</span>}
+      {debug && <span className='absolute w-20 aspect-square z-10 top-10 left-10'>x: {selected[1]?.position.y} y: {selected[1]?.position.x}</span>}
       <div className='relative h-[60rem] w-[60rem]' /* board */>
         { tiles.map(i => <Tile src={i.src} color={i.color} position={i.position} debug={debug} onClick={setSelected}/>) }
       </div>
@@ -75,3 +97,14 @@ function App(): JSX.Element {
   </>
 }
 export default App
+
+function usePrevious<T>(initial: T | null): [[null | T, null | T], (val: T) => void] {
+  /* [prev, current], because append works similarly */
+  const [state, setState] = useState<[null | T, null | T]>([null, initial]);
+
+  function mutateState(val: T): void {
+      setState(prev => [prev[1], val])
+  }
+
+  return [state, mutateState]
+}
