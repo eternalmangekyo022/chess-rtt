@@ -1,6 +1,4 @@
-import { SVGProps } from "react"
-
-const Sun = (props: SVGProps<SVGSVGElement>) => (
+const Sun = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 512 512"
