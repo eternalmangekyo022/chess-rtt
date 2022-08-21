@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Tile, { TileType } from './components/Tile';
-import Moon from './components/Moon'
-import Sun from './components/Sun'
+import Moon from './components/Moon';
+import Sun from './components/Sun';
 import { isEqual } from 'lodash';
 import { atom, useAtom } from 'jotai';
 import { motion } from 'framer-motion'

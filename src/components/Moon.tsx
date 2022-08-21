@@ -1,11 +1,11 @@
 import * as React from "react"
 
-const Moon = (props) => (
+const Moon: React.FC = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 47.167 47.167"
     style={{
-      enableBackground: "new 0 0 47.167 47.167",
+
     }}
     xmlSpace="preserve"
     {...props}
