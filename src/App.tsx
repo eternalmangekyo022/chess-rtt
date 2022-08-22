@@ -23,7 +23,8 @@ import KingWhite from './pieces/king-white.png';
 
 const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] }
 
-const _theme = atom< 1 /* light */ | -1 /* dark */ >(1)
+const now = new Date().getHours()
+const _theme = atom< 1 /* light */ | -1 /* dark */ >(now < 7 || now > 20 ? -1 : 1)
 export { _theme }
 
 
@@ -127,7 +128,7 @@ function App(): JSX.Element {
     transition={{ duration: .3 }}
     >
       <div onClick={() => setTheme(theme === -1 ? 1 : -1)} className='absolute w-12 h-12 right-24 top-12 flex justify-center items-center cursor-pointer' /* container for animation */>
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           <motion.div
           className='w-12 absolute'
           key={theme}
@@ -163,15 +164,20 @@ function usePrevious<T>(initial: T | null): [[null | T, null | T], (val: T) => v
 }
 
 /**
- * ##### Can not use with lists or objects
  * Works with booleans, strings and numbers
+ * @param initial A list containing values to toggle between
+ * @example
+ * const [weather, toggleWeather] = useToggle(['sunny', 'cloudy']);
+ * weather -> 'sunny'
+ * toggleWeather() -> 'cloudy'
+ * toggleWeather() -> 'sunny'
 */
-function useToggle<T, U=T>(initial: [T, U]): [T | U, () => void] {
-  const [state, setState] = useState<T | U>(initial[0]);
+/* function useToggle<T=string | number | boolean>(initial: [T, T]): [T, () => void] {
+  const [state, setState] = useState<T>(initial[0]);
 
   function toggle(): void {
     setState(prev => prev === initial[0] ? initial[1] : initial[0])
   }
 
   return [state, toggle]
-}
+} */
