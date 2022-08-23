@@ -89,6 +89,7 @@ function App(): JSX.Element {
     setTiles(temp)
   }, [])
 
+
   useEffect(() => {
     if(tiles.length < 64) return
     const temp = [...tiles];
@@ -141,7 +142,7 @@ function App(): JSX.Element {
         </AnimatePresence>
       </div>
       <div className='relative h-[60rem] w-[60rem]' /* board */>
-        { tiles.map(i => <Tile size={i.size} src={i.src} color={i.color} position={i.position} debug={false} onClick={setSelected}/>) }
+        { tiles.map((tile, i) => <div key={i}><Tile size={tile.size} src={tile.src} color={tile.color} position={tile.position} debug={false} onClick={setSelected}/></div>) }
       </div>
     </motion.div>
   </>
