@@ -87,6 +87,7 @@ function App(): JSX.Element {
       /* temp.push({ color: row % 2 === 0 ? 'white' : 'black', position: { x: row % 8, y: Math.floor(row / 8) } }) */
     }
     setTiles(temp)
+    
   }, [])
 
 
@@ -141,7 +142,7 @@ function App(): JSX.Element {
           </motion.div>
         </AnimatePresence>
       </div>
-      <div className='relative h-[60rem] w-[60rem]' /* board */>
+      <div className='relative min-w-[10rem] max-w-[60rem] w-full aspect-square' /* board: 240x240*/>
         { tiles.map((tile, i) => <div key={i}><Tile size={tile.size} src={tile.src} color={tile.color} position={tile.position} debug={false} onClick={setSelected}/></div>) }
       </div>
     </motion.div>

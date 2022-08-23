@@ -20,8 +20,8 @@ function Tile({ color, position, src, onClick, debug, size }: TileProps): JSX.El
     return <>
             <motion.div
             onClick={() => onClick({ color, position, src })}
-            style={{ left: `${position.x * 7.5}rem`, top: `${position.y * 7.5}rem` } }
-            className={`h-[7.5rem] w-[7.5rem] absolute`}
+            style={{ left: `${position.x * 12.5}%`, top: `${position.y * 12.5}%` } }
+            className={`h-[12.5%] w-[12.5%] absolute`}
             animate={{ backgroundColor: color  }}
             transition={{ duration: .3 }}
             >
