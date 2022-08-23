@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import Tile, { TileType } from './components/Tile';
-import Moon from './components/Moon';
-import Sun from './components/Sun';
 import { isEqual } from 'lodash';
 import { atom, useAtom } from 'jotai';
 import { motion, AnimatePresence } from 'framer-motion'
@@ -22,9 +20,11 @@ import BishopWhite from './pieces/bishop-white.png';
 import KingWhite from './pieces/king-white.png';
 
 const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] }
-
+const animationDistance = -70;
 const now = new Date().getHours()
 const _theme = atom< 1 /* light */ | -1 /* dark */ >(now < 7 || now > 20 ? -1 : 1)
+
+
 export { _theme }
 
 
@@ -131,13 +131,13 @@ function App(): JSX.Element {
       <div onClick={() => setTheme(theme === -1 ? 1 : -1)} className='absolute w-12 h-12 right-24 top-12 flex justify-center items-center cursor-pointer' /* container for animation */>
         <AnimatePresence initial={false}>
           <motion.div
-          className='w-12 absolute'
+          className='w-12 absolute text-5xl'
           key={theme}
-          initial={{x: theme * -50}}
+          initial={{x: theme * animationDistance}}
           animate={{ x: 0 }}
-          exit={{ x: theme * -50, opacity: 0 }}
+          exit={{ x: theme * animationDistance, opacity: 0 }}
           >
-            {theme === 1 ? <Sun/> : <Moon/>}
+            {theme === 1 ? <span>☀️</span> : <span>🌑</span>}
           </motion.div>
         </AnimatePresence>
       </div>
