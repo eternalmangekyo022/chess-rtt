@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Tile, { TileType } from './components/Tile';
 import { isEqual } from 'lodash';
 import { atom, useAtom } from 'jotai';
@@ -68,6 +68,7 @@ async function getColor(__theme: number, { x, y }: position): Promise<string> {
 }
 
 function App(): JSX.Element {
+  const shouldRender = useRef<boolean>(true);
   const [tiles, setTiles] = useState<TileType[]>([]);
   const [selected, _setSelected] = usePrevious<TileType | null>(null);
   const setSelected = useCallback((val: TileType | null) => {
@@ -102,24 +103,28 @@ function App(): JSX.Element {
   }, [theme])
 
   useEffect(() => {
-    if(isEqual(selected[0], selected[1])) {
-      return
-    }
-    if(selected[0]?.src) {
-      const temp = [...tiles]
-      for(let i = 0; i < temp.length; i++) {
-        if(isEqual(temp[i].position, selected[1]?.position)) {
-          temp[i].src = selected[0].src
-          temp[i].size = 70
-          for(let j = 0; j < temp.length; j++) {
-            if(isEqual(temp[j].position, selected[0]?.position)) temp[j].src = null
-          }
-          break
-        }
+    if(shouldRender.current) {
+      if(isEqual(selected[0], selected[1])) {
+        setSelected(null)
+        shouldRender.current = false
+        return
       }
-      setTiles(temp)
-      setSelected(null)
-    }
+      if(selected[0]?.src) {
+        const temp = [...tiles]
+        for(let i = 0; i < temp.length; i++) {
+          if(isEqual(temp[i].position, selected[1]?.position)) {
+            temp[i].src = selected[0].src
+            temp[i].size = 70
+            for(let j = 0; j < temp.length; j++) {
+              if(isEqual(temp[j].position, selected[0]?.position)) temp[j].src = null
+            }
+            break
+          }
+        }
+        setTiles(temp)
+        setSelected(null)
+      }
+    } else shouldRender.current = true
     /* console.log(selected[0]?.position, selected[1]?.position) */
   }, [selected])
 
@@ -142,7 +147,7 @@ function App(): JSX.Element {
           </motion.div>
         </AnimatePresence>
       </div>
-      <div className='relative min-w-[10rem] max-w-[60rem] w-full aspect-square' /* board: 240x240*/>
+      <div className='relative min-w-[10rem] max-w-[50rem] w-full aspect-square' /* board: 240x240*/>
         { tiles.map((tile, i) => <div key={i}><Tile size={tile.size} src={tile.src} color={tile.color} position={tile.position} debug={false} onClick={setSelected}/></div>) }
       </div>
     </motion.div>
