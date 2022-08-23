@@ -19,6 +19,7 @@ import PawnWhite from './pieces/pawn-white.png';
 import BishopWhite from './pieces/bishop-white.png';
 import KingWhite from './pieces/king-white.png';
 
+
 const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] }
 const animationDistance = -70;
 const now = new Date().getHours()
@@ -31,15 +32,103 @@ export { _theme }
 type position = TileType['position']
 
 
+function App(): JSX.Element {
+  const shouldRender = useRef<boolean>(true);
+  const [tiles, setTiles] = useState<TileType[]>([]);
+  const [selected, _setSelected] = usePrevious<TileType | null>(null);
+  const setSelected = useCallback((val: TileType | null) => {
+    _setSelected(val)
+  }, [])
+  const [theme, setTheme] = useAtom(_theme)
+
+  useEffect(() => {
+    const temp: TileType[] = []
+
+    const addTile = async({ x, y }: position): Promise<number> => temp.push({ color: await getColor(theme, { x, y }), position: { x, y }, src: await getPiece({ x: y, y: x }) })
+
+    for(let y = 0; y < 8; y++) {
+      for(let x = 0; x < 8; x++) {
+        addTile({ x, y })
+      }
+      /* temp.push({ color: row % 2 === 0 ? 'white' : 'black', position: { x: row % 8, y: Math.floor(row / 8) } }) */
+    }
+    setTiles(temp)
+
+
+  }, [])
+
+
+  useEffect(() => {
+    if(tiles.length < 64) return
+    const temp = [...tiles];
+    for(let i = 0; i < temp.length; i++) {
+      getColor(theme, temp[i].position)
+        .then(res => temp[i].color = res)
+    }
+    setTiles(temp)
+  }, [theme])
+
+  useEffect(() => {
+    if(shouldRender.current) {
+      if(isEqual(selected[0], selected[1]))
+        setSelected(null)
+        shouldRender.current = false
+        return
+      }
+      if(selected[0]?.src) {
+        const temp = [...tiles]
+        for(let i = 0; i < temp.length; i++) {
+          if(isEqual(temp[i].position, selected[1]?.position)) {
+            temp[i].src = selected[0].src
+            temp[i].size = 70
+            for(let j = 0; j < temp.length; j++) {
+              if(isEqual(temp[j].position, selected[0]?.position)) temp[j].src = null
+            }
+            break
+          }
+        }
+        setTiles(temp)
+        setSelected(null)
+      } else shouldRender.current = true
+    /* console.log(selected[0]?.position, selected[1]?.position) */
+  }, [selected])
+
+  return <>
+    <motion.div
+    className={`relative w-screen h-screen flex justify-center items-center`}
+    animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : 'rgb(17, 24, 39)' }}
+    transition={{ duration: .3 }}
+    >
+      <div onClick={() => setTheme(theme === -1 ? 1 : -1)} className='absolute w-12 h-12 right-24 top-12 flex justify-center items-center cursor-pointer' /* container for animation */>
+        <AnimatePresence initial={false}>
+          <motion.div
+          className='w-12 absolute text-5xl'
+          key={theme}
+          initial={{x: theme * animationDistance}}
+          animate={{ x: 0 }}
+          exit={{ x: theme * animationDistance, opacity: 0 }}
+          >
+            {theme === 1 ? <span>🌅</span> : <span>🌃</span>}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <div className='relative min-w-[10rem] max-w-[50rem] w-full aspect-square' /* board: 240x240*/>
+        { tiles.map((tile, i) => <div key={i}><Tile size={tile.size} src={tile.src} color={tile.color} position={tile.position} debug={false} onClick={setSelected}/></div>) }
+      </div>
+    </motion.div>
+  </>
+}
+
+
 /**
  * This function helps you determine what type of piece belongs to
  * a specific position at the start of the round.
  * @param coordinates row coordinate of tile to search for, that are best when destructured, each coord can be 7 at max.
  * @example
-* let piece: { src: string | null } = { src: null }
-* piece.src = getPiece(tiles[0].position)
+ * let piece: { src: string | null } = { src: null }
+ * piece.src = getPiece(tiles[0].position)
  * 
- */
+*/
 async function getPiece({ x, y }: position): Promise<string | null> {
 
 
@@ -67,94 +156,15 @@ async function getColor(__theme: number, { x, y }: position): Promise<string> {
   return __theme === 1 ? /* light theme */(x % 2 === 0 ? (y % 2 === 0 ? colors.light[0] : colors.light[1]) : (y % 2 === 0 ? colors.light[1] : colors.light[0])) : /* non-light theme */(x % 2 === 0 ? (y % 2 === 0 ? colors.dark[0] : colors.dark[1]): (y % 2 === 0 ? colors.dark[1] : colors.dark[0]))
 }
 
-function App(): JSX.Element {
-  const shouldRender = useRef<boolean>(true);
-  const [tiles, setTiles] = useState<TileType[]>([]);
-  const [selected, _setSelected] = usePrevious<TileType | null>(null);
-  const setSelected = useCallback((val: TileType | null) => {
-    _setSelected(val)
-  }, [])
-  const [theme, setTheme] = useAtom(_theme)
-
-  useEffect(() => {
-    const temp: TileType[] = []
-
-    const addTile = async({ x, y }: position): Promise<number> => temp.push({ color: await getColor(theme, { x, y }), position: { x, y }, src: await getPiece({ x: y, y: x }) })
-
-    for(let y = 0; y < 8; y++) {
-      for(let x = 0; x < 8; x++) {
-        addTile({ x, y })
-      }
-      /* temp.push({ color: row % 2 === 0 ? 'white' : 'black', position: { x: row % 8, y: Math.floor(row / 8) } }) */
-    }
-    setTiles(temp)
-    
-  }, [])
-
-
-  useEffect(() => {
-    if(tiles.length < 64) return
-    const temp = [...tiles];
-    for(let i = 0; i < temp.length; i++) {
-      getColor(theme, temp[i].position)
-        .then(res => temp[i].color = res)
-    }
-    setTiles(temp)
-  }, [theme])
-
-  useEffect(() => {
-    if(shouldRender.current) {
-      if(isEqual(selected[0], selected[1])) {
-        setSelected(null)
-        shouldRender.current = false
-        return
-      }
-      if(selected[0]?.src) {
-        const temp = [...tiles]
-        for(let i = 0; i < temp.length; i++) {
-          if(isEqual(temp[i].position, selected[1]?.position)) {
-            temp[i].src = selected[0].src
-            temp[i].size = 70
-            for(let j = 0; j < temp.length; j++) {
-              if(isEqual(temp[j].position, selected[0]?.position)) temp[j].src = null
-            }
-            break
-          }
-        }
-        setTiles(temp)
-        setSelected(null)
-      }
-    } else shouldRender.current = true
-    /* console.log(selected[0]?.position, selected[1]?.position) */
-  }, [selected])
-
-  return <>
-    <motion.div
-    className={`relative w-screen h-screen flex justify-center items-center`}
-    animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : 'rgb(17, 24, 39)' }}
-    transition={{ duration: .3 }}
-    >
-      <div onClick={() => setTheme(theme === -1 ? 1 : -1)} className='absolute w-12 h-12 right-24 top-12 flex justify-center items-center cursor-pointer' /* container for animation */>
-        <AnimatePresence initial={false}>
-          <motion.div
-          className='w-12 absolute text-5xl'
-          key={theme}
-          initial={{x: theme * animationDistance}}
-          animate={{ x: 0 }}
-          exit={{ x: theme * animationDistance, opacity: 0 }}
-          >
-            {theme === 1 ? <span>☀️</span> : <span>🌑</span>}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-      <div className='relative min-w-[10rem] max-w-[50rem] w-full aspect-square' /* board: 240x240*/>
-        { tiles.map((tile, i) => <div key={i}><Tile size={tile.size} src={tile.src} color={tile.color} position={tile.position} debug={false} onClick={setSelected}/></div>) }
-      </div>
-    </motion.div>
-  </>
+async function addUser({ name, password }: { name: string, password: string }): Promise<void> {
+  try {
+    const res = await fetch(`https://europe-west1.gcp.data.mongodb-api.com/app/chess4life-ffndx/endpoint/users/add?name=${name}&password=${password}`, {
+      method: 'POST',
+    })
+  } catch(e) {
+    console.error(e)
+  }
 }
-export default App
-
 
 /**
  * 
@@ -188,3 +198,5 @@ function usePrevious<T>(initial: T | null): [[null | T, null | T], (val: T) => v
 
   return [state, toggle]
 } */
+
+export default App
