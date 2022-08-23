@@ -53,8 +53,6 @@ function App(): JSX.Element {
       /* temp.push({ color: row % 2 === 0 ? 'white' : 'black', position: { x: row % 8, y: Math.floor(row / 8) } }) */
     }
     setTiles(temp)
-
-
   }, [])
 
 
