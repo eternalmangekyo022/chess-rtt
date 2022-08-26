@@ -23,8 +23,7 @@ import KingWhite from './pieces/king-white.png';
 const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] }
 const animationDistance = -70;
 const now = new Date().getHours()
-const _theme = atom< 1 /* light */ | -1 /* dark */ >(now < 7 || now > 20 ? -1 : 1)
-
+const _theme = atom< 1 /* light */ | -1 /* dark */ >((now < 7 || now >= 20) ? -1 : 1)
 
 export { _theme }
 
@@ -44,15 +43,15 @@ function App(): JSX.Element {
   useEffect(() => {
     const temp: TileType[] = []
 
-    const addTile = async({ x, y }: position): Promise<number> => temp.push({ color: await getColor(theme, { x, y }), position: { x, y }, src: await getPiece({ x: y, y: x }) })
+    const addTile = async({ x, y }: position): Promise<number> => temp.push({ color: await getColor(theme, { x, y }), position: { x, y }, src: await getPiece({ x: y, y: x }) });
 
-    for(let y = 0; y < 8; y++) {
-      for(let x = 0; x < 8; x++) {
-        addTile({ x, y })
+    (async() => {
+      for(let y = 0; y < 8; y++) {
+        for(let x = 0; x < 8; x++) { addTile({ x, y }) }
+        /* temp.push({ color: row % 2 === 0 ? 'white' : 'black', position: { x: row % 8, y: Math.floor(row / 8) } }) */
       }
-      /* temp.push({ color: row % 2 === 0 ? 'white' : 'black', position: { x: row % 8, y: Math.floor(row / 8) } }) */
-    }
-    setTiles(temp)
+    })()
+      .then(() => {setTiles(temp)})
   }, [])
 
 
@@ -73,7 +72,7 @@ function App(): JSX.Element {
         shouldRender.current = false;
         return
       }
-      if(selected[0]?.src) {
+      if(selected[0]?.src) /* piece moves */ {
         const temp = [...tiles]
         for(let i = 0; i < temp.length; i++) {
           if(isEqual(temp[i].position, selected[1]?.position)) {
@@ -151,11 +150,43 @@ async function getPiece({ x, y }: position): Promise<string | null> {
   return null
 }
 
-async function getColor(__theme: number, { x, y }: position): Promise<string> {
-  return __theme === 1 ? /* light theme */(x % 2 === 0 ? (y % 2 === 0 ? colors.light[0] : colors.light[1]) : (y % 2 === 0 ? colors.light[1] : colors.light[0])) : /* non-light theme */(x % 2 === 0 ? (y % 2 === 0 ? colors.dark[0] : colors.dark[1]): (y % 2 === 0 ? colors.dark[1] : colors.dark[0]))
+const getColor = async(__theme: number, { x, y }: position): Promise<string> => __theme === 1 ?
+/* light theme */
+x % 2 === 0 ?
+  (y % 2 === 0 ? 
+    colors.light[0] : 
+    colors.light[1]) 
+    : (y % 2 === 0 ?
+       colors.light[1] :
+        colors.light[0]) :
+/* non-light theme */
+x % 2 === 0 ? 
+  (y % 2 === 0 ? 
+    colors.dark[0] : 
+    colors.dark[1]): 
+    (y % 2 === 0 ? 
+      colors.dark[1] : 
+      colors.dark[0])
+
+
+/* type TileType = {
+    color: string
+    position: { x: number, y: number }
+    src: null | string
+    size?: number
+} */
+
+async function canStep(first: TileType, target: TileType): Promise<boolean> {
+  const piece = first.src?.split("./pieces/")[1].split(".png")[0]
+  console.log(piece) // eg. white-knight
+  if(first.src === "") {
+
+  }
+
+  return false
 }
 
-async function addUser({ name, password }: { name: string, password: string }): Promise<void> {
+/* async function addUser({ name, password }: { name: string, password: string }): Promise<void> {
   try {
     const res = await fetch(`https://europe-west1.gcp.data.mongodb-api.com/app/chess4life-ffndx/endpoint/users/add?name=${name}&password=${password}`, {
       method: 'POST',
@@ -163,8 +194,9 @@ async function addUser({ name, password }: { name: string, password: string }): 
   } catch(e) {
     console.error(e)
   }
-}
+} */
 
+// hooks
 /**
  * 
 */
