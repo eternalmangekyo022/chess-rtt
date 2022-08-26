@@ -27,11 +27,25 @@ const _theme = atom< 1 /* light */ | -1 /* dark */ >((now < 7 || now >= 20) ? -1
 
 export { _theme }
 
+const typeSizes = {
+  "bigint": () => 0,
+  "symbol": () => 0,
+  "function": () => 0,
+  "undefined": () => 0,
+  "boolean": () => 4,
+  "number": () => 8,
+  "string": (item: string) => 2 * item.length,
+  "object": (item: {[key: string]: any}): number => !item ? 0 : Object
+    .keys(item)
+    .reduce((total, key) => sizeOf(key) + sizeOf(item[key]) + total, 0)
+};
 
+function sizeOf(value: any): number {return typeSizes[typeof value](value)} 
 type position = TileType['position']
 
 
 function App(): JSX.Element {
+  const test = useRef<TileType[][]>([])
   const shouldRender = useRef<boolean>(true);
   const [tiles, setTiles] = useState<TileType[]>([]);
   const [selected, _setSelected] = usePrevious<TileType | null>(null);
@@ -43,7 +57,11 @@ function App(): JSX.Element {
   useEffect(() => {
     const temp: TileType[] = []
 
-    const addTile = async({ x, y }: position): Promise<number> => temp.push({ color: await getColor(theme, { x, y }), position: { x, y }, src: await getPiece({ x: y, y: x }) });
+    const addTile = async({ x, y }: position): Promise<number> => temp.push({
+        color: await getColor(theme, { x, y }), 
+        position: { x, y }, 
+        src: await getPiece({ x: y, y: x })
+    });
 
     (async() => {
       for(let y = 0; y < 8; y++) {
@@ -51,7 +69,7 @@ function App(): JSX.Element {
         /* temp.push({ color: row % 2 === 0 ? 'white' : 'black', position: { x: row % 8, y: Math.floor(row / 8) } }) */
       }
     })()
-      .then(() => {setTiles(temp)})
+      .then(() => {setTiles(temp); test.current.push(temp)})
   }, [])
 
 
@@ -85,6 +103,8 @@ function App(): JSX.Element {
           }
         }
         setTiles(temp)
+        test.current.push(temp)
+        /* console.log(`${sizeOf(test.current) / (1024 * 1024)} MB`) */
         setSelected(null)
       }
     } else shouldRender.current = true
@@ -97,7 +117,10 @@ function App(): JSX.Element {
     animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : 'rgb(17, 24, 39)' }}
     transition={{ duration: .3 }}
     >
-      <div onClick={() => setTheme(theme === -1 ? 1 : -1)} className='absolute w-12 h-12 right-24 top-12 flex justify-center items-center cursor-pointer' /* container for animation */>
+      <div 
+        onClick={() => setTheme(theme === -1 ? 1 : -1)}
+        className='absolute w-12 h-12 right-24 top-12 flex
+                  justify-center items-center cursor-pointer' /* container for animation */>
         <AnimatePresence initial={false}>
           <motion.div
           className='w-12 absolute text-5xl'
@@ -111,7 +134,16 @@ function App(): JSX.Element {
         </AnimatePresence>
       </div>
       <div className='relative min-w-[10rem] max-w-[50rem] w-full aspect-square' /* board: 240x240*/>
-        { tiles.map((tile, i) => <div key={i}><Tile size={tile.size} src={tile.src} color={tile.color} position={tile.position} debug={false} onClick={setSelected}/></div>) }
+        { tiles.map((tile, i) => 
+        <div key={i}>
+          <Tile 
+            size={tile.size} 
+            src={tile.src} 
+            color={tile.color} 
+            position={tile.position} 
+            debug={false} 
+            onClick={setSelected}/>
+        </div>) }
       </div>
     </motion.div>
   </>
