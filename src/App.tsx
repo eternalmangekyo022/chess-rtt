@@ -68,7 +68,7 @@ function App(): JSX.Element {
 
   useEffect(() => {
     if(shouldRender.current) {
-      if(isEqual(selected[0], selected[1]))
+      if(isEqual(selected[0], selected[1])) {
         setSelected(null)
         shouldRender.current = false
         return
@@ -87,7 +87,8 @@ function App(): JSX.Element {
         }
         setTiles(temp)
         setSelected(null)
-      } else shouldRender.current = true
+      }
+    } else shouldRender.current = true
     /* console.log(selected[0]?.position, selected[1]?.position) */
   }, [selected])
 
