@@ -16,7 +16,7 @@ interface TileProps extends TileType {
 function Tile({ color, position, src, onClick, debug, size }: TileProps): JSX.Element {
     /* console.log(color) */
     /* '#EDEED1' : '#7FA650' */
-
+    
     return <>
             <motion.div
             onClick={() => onClick({ color, position, src })}
