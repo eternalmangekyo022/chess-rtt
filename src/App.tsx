@@ -70,7 +70,7 @@ function App(): JSX.Element {
     if(shouldRender.current) {
       if(isEqual(selected[0], selected[1])) {
         setSelected(null)
-        shouldRender.current = false
+        shouldRender.current = false;
         return
       }
       if(selected[0]?.src) {
@@ -118,7 +118,7 @@ function App(): JSX.Element {
   </>
 }
 
-
+/* Jp692a5bdp */  
 /**
  * This function helps you determine what type of piece belongs to
  * a specific position at the start of the round.
