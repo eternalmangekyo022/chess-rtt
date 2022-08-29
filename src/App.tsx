@@ -1,32 +1,34 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import Tile, { TileType } from './components/Tile';
-import { isEqual } from 'lodash';
+import { AnimatePresence, motion } from 'framer-motion';
 import { atom, useAtom } from 'jotai';
-import { motion, AnimatePresence } from 'framer-motion'
+import { isEqual } from 'lodash';
+import { useCallback, useEffect, useRef, useState } from "react";
 import './App.css';
+import Tile, { TileType } from './components/Tile';
+import Modal from './components/Modal';
 
-import QueenBlack from './pieces/queen-black.png';
-import KnightBlack from './pieces/knight-black.png';
-import RookBlack from './pieces/rook-black.png';
-import PawnBlack from './pieces/pawn-black.png';
+
 import BishopBlack from './pieces/bishop-black.png';
 import KingBlack from './pieces/king-black.png';
+import KnightBlack from './pieces/knight-black.png';
+import PawnBlack from './pieces/pawn-black.png';
+import QueenBlack from './pieces/queen-black.png';
+import RookBlack from './pieces/rook-black.png';
 
-import QueenWhite from './pieces/queen-white.png';
-import KnightWhite from './pieces/knight-white.png';
-import RookWhite from './pieces/rook-white.png';
-import PawnWhite from './pieces/pawn-white.png';
 import BishopWhite from './pieces/bishop-white.png';
 import KingWhite from './pieces/king-white.png';
+import KnightWhite from './pieces/knight-white.png';
+import PawnWhite from './pieces/pawn-white.png';
+import QueenWhite from './pieces/queen-white.png';
+import RookWhite from './pieces/rook-white.png';
 
 const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] }
 const animationDistance = -70;
 const now = new Date().getHours()
 const _theme = atom<1 /* light */ | -1 /* dark */>((now < 7 || now >= 19) ? -1 : 1)
-const defaultBoard = resetBoard((now < 7 || now >= 19) ? -1 : 1)
+/* const defaultBoard = resetBoard((now < 7 || now >= 19) ? -1 : 1) */
 
 
-export { _theme }
+export { _theme };
 
 const typeSizes = {
   "bigint": () => 0,
@@ -46,6 +48,7 @@ type position = TileType['position']
 
 
 function App(): JSX.Element {
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
   const history = useRef<TileType[][]>([])
   const shouldRender = useRef<boolean>(true);
   const [tiles, setTiles] = useState<TileType[]>([]);
@@ -108,7 +111,7 @@ function App(): JSX.Element {
       <button className={`absolute top-8 cursor-pointer rounded-sm left-8 z-10 w-8 text-4xl aspect-square`}
         onClick={async() => {
           setTiles(await resetBoard(theme));
-
+          setModalOpen(true);
         }}
         children='⚠️'
       />
@@ -139,6 +142,7 @@ function App(): JSX.Element {
               onClick={setSelected} />
           </div>)}
       </div>
+      <Modal shadow open={modalOpen} close={() => setModalOpen(false)}><span>hi</span></Modal>
     </motion.div>
   </>
 }
