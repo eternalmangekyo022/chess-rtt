@@ -21,6 +21,7 @@ import PawnWhite from './pieces/pawn-white.png';
 import QueenWhite from './pieces/queen-white.png';
 import RookWhite from './pieces/rook-white.png';
 
+
 const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] }
 const animationDistance = -70;
 const now = new Date().getHours()
@@ -53,6 +54,7 @@ function App(): JSX.Element {
   const shouldRender = useRef<boolean>(true);
   const [tiles, setTiles] = useState<TileType[]>([]);
   const [selected, _setSelected] = usePrevious<TileType | null>(null);
+  const [test, setTest] = useState<null | string>(null);
   const setSelected = useCallback((val: TileType | null) => {
     _setSelected(val)
   }, [])
@@ -61,6 +63,7 @@ function App(): JSX.Element {
   useEffect(() => {
     resetBoard(theme)
       .then(res => { setTiles(res); history.current.push(res) })
+    
   }, [])
 
 
@@ -105,10 +108,14 @@ function App(): JSX.Element {
   return <>
     <motion.div
       className={`relative w-screen h-screen flex justify-center items-center`}
-      animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : 'rgb(17, 24, 39)' }}
+      animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : '#3F4E4F' }}
       transition={{ duration: .3 }}
     >
-      <button className={`absolute top-8 cursor-pointer rounded-sm left-8 z-10 w-8 text-4xl aspect-square`}
+      <motion.button
+        initial={{ x: -100 }}
+        animate={{ x: 0 }}
+        transition={{ delay: .3 }}
+        className={`absolute top-8 left-8 cursor-pointer rounded-sm z-10 w-8 text-4xl aspect-square`}
         onClick={() => {
           setModalOpen(true);
         }}
@@ -116,9 +123,8 @@ function App(): JSX.Element {
       />
       <div
         onClick={() => setTheme(theme === -1 ? 1 : -1)}
-        className='absolute w-12 h-12 right-24 top-12 flex
-                  justify-center items-center cursor-pointer' /* container for animation */>
-        <AnimatePresence initial={false}>
+        className='absolute w-12 h-12 right-[15%] top-8 flex justify-center items-center cursor-pointer' /* container for animation */>
+        <AnimatePresence>
           <motion.div
             className='w-12 absolute text-5xl'
             key={theme}
@@ -149,10 +155,12 @@ function App(): JSX.Element {
             setTiles(await resetBoard(theme))
             setModalOpen(false)
           }}
+          draggable={false}
           className='absolute bottom-6 right-6 w-[10%] aspect-square cursor-pointer'
         />
         <img
           src='https://www.svgrepo.com/show/286637/cancel-close.svg'
+          draggable={false}
           onClick={async() => {
             setModalOpen(false)
           }}
@@ -162,7 +170,6 @@ function App(): JSX.Element {
     </motion.div>
   </>
 }
-
 /* Jp692a5bdp */
 /**
  * Helps you determine what type of piece belongs to
