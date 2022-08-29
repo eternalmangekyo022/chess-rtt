@@ -109,8 +109,7 @@ function App(): JSX.Element {
       transition={{ duration: .3 }}
     >
       <button className={`absolute top-8 cursor-pointer rounded-sm left-8 z-10 w-8 text-4xl aspect-square`}
-        onClick={async() => {
-          setTiles(await resetBoard(theme));
+        onClick={() => {
           setModalOpen(true);
         }}
         children='⚠️'
@@ -142,7 +141,24 @@ function App(): JSX.Element {
               onClick={setSelected} />
           </div>)}
       </div>
-      <Modal shadow open={modalOpen} close={() => setModalOpen(false)}><span>hi</span></Modal>
+      <Modal shadow flex open={modalOpen} close={() => setModalOpen(false)}>
+        <span className='absolute left-1/2 -translate-x-[50%] top-[20%]'>Reset board?</span>
+        <img
+          src='https://www.svgrepo.com/show/384403/accept-check-good-mark-ok-tick.svg'
+          onClick={async() => {
+            setTiles(await resetBoard(theme))
+            setModalOpen(false)
+          }}
+          className='absolute bottom-6 right-6 w-[10%] aspect-square cursor-pointer'
+        />
+        <img
+          src='https://www.svgrepo.com/show/286637/cancel-close.svg'
+          onClick={async() => {
+            setModalOpen(false)
+          }}
+          className='absolute bottom-6 left-6 w-[10%] aspect-square cursor-pointer'
+        />
+      </Modal>
     </motion.div>
   </>
 }

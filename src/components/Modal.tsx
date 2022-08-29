@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import React, { Children } from 'react'
+import React from 'react'
 
 type ModalProps = {
     open: boolean
@@ -7,9 +7,10 @@ type ModalProps = {
     shadow?: boolean
     flex?: boolean
     close: () => void
+    closeButton?: boolean
 }
 
-function Modal({open, children, flex=false, shadow=false, close}: ModalProps): JSX.Element {
+function Modal({open, children, flex=false, shadow=false, close, closeButton=false}: ModalProps): JSX.Element {
     
 
     return <>
@@ -22,17 +23,20 @@ function Modal({open, children, flex=false, shadow=false, close}: ModalProps): J
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className={`rounded-xl w-[20%] h-[25%] min-h-[10rem] min-w-[15rem] max-w-[30rem] max-h-[30rem] bg-white ${flex && 'flex'}`}
+                        className={`rounded-xl w-[20%] h-[25%] min-h-[10rem] min-w-[15rem] max-w-[30rem] max-h-[30rem] bg-white ${flex && 'flex'} justify-center items-center`}
                         initial={{ y: '100vh' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100vh' }}
                     >
                         {children}
-                        <button 
-                            onClick={close}
-                            className='absolute w-10 h-10 top-[5%] right-[5%] bg-slate-400'
-                        ></button>
-                        
+                        { closeButton && 
+                            <img
+                                className='absolute w-10 h-10 top-[5%] right-[5%] cursor-pointer'
+                                draggable={false}
+                                onClick={close}
+                                src='https://www.svgrepo.com/show/180983/cancel-close.svg'
+                            />
+                        }
                     </motion.div>
                 </motion.div>
             }
