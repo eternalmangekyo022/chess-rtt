@@ -45,7 +45,7 @@ type position = TileType['position']
 
 
 function App(): JSX.Element {
-  const test = useRef<TileType[][]>([])
+  const history = useRef<TileType[][]>([])
   const shouldRender = useRef<boolean>(true);
   const [tiles, setTiles] = useState<TileType[]>([]);
   const [selected, _setSelected] = usePrevious<TileType | null>(null);
@@ -59,7 +59,8 @@ function App(): JSX.Element {
 
     const addTile = async({ x, y }: position): Promise<number> => temp.push({
         color: await getColor(theme, { x, y }), 
-        position: { x, y }, 
+        position: { x, y },
+        selected: false,
         src: await getPiece({ x: y, y: x })
     });
 
@@ -69,7 +70,7 @@ function App(): JSX.Element {
         /* temp.push({ color: row % 2 === 0 ? 'white' : 'black', position: { x: row % 8, y: Math.floor(row / 8) } }) */
       }
     })()
-      .then(() => {setTiles(temp); test.current.push(temp)})
+      .then(() => {setTiles(temp); history.current.push(temp)})
   }, [])
 
 
@@ -85,17 +86,15 @@ function App(): JSX.Element {
 
   useEffect(() => {
     if(shouldRender.current) {
-      if(isEqual(selected[0], selected[1])) {
+      if(isEqual(selected[0]?.position, selected[1]?.position)) {
         setSelected(null)
         shouldRender.current = false;
         return
-      }
-      if(selected[0]?.src) /* piece moves */ {
+      } else if(selected[0]?.src && selected[1]?.position) /* piece moves */ {
         const temp = [...tiles]
         for(let i = 0; i < temp.length; i++) {
           if(isEqual(temp[i].position, selected[1]?.position)) {
             temp[i].src = selected[0].src
-            temp[i].size = 70
             for(let j = 0; j < temp.length; j++) {
               if(isEqual(temp[j].position, selected[0]?.position)) temp[j].src = null
             }
@@ -103,11 +102,13 @@ function App(): JSX.Element {
           }
         }
         setTiles(temp)
-        test.current.push(temp)
+        history.current.push(temp)
         /* console.log(`${sizeOf(test.current) / (1024 * 1024)} MB`) */
         setSelected(null)
       }
-    } else shouldRender.current = true
+      return
+    }
+    shouldRender.current = true
     /* console.log(selected[0]?.position, selected[1]?.position) */
   }, [selected])
 
@@ -117,6 +118,12 @@ function App(): JSX.Element {
     animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : 'rgb(17, 24, 39)' }}
     transition={{ duration: .3 }}
     >
+      <button className='absolute top-8 left-8 z-10 w-8 aspect-square bg-black' 
+        onClick={() => {
+          setTiles(history.current[0])
+          console.log(history)
+        }}
+      />
       <div 
         onClick={() => setTheme(theme === -1 ? 1 : -1)}
         className='absolute w-12 h-12 right-24 top-12 flex
@@ -136,12 +143,11 @@ function App(): JSX.Element {
       <div className='relative min-w-[10rem] max-w-[50rem] w-full aspect-square' /* board: 240x240*/>
         { tiles.map((tile, i) => 
         <div key={i}>
-          <Tile 
-            size={tile.size} 
-            src={tile.src} 
-            color={tile.color} 
-            position={tile.position} 
-            debug={false} 
+          <Tile
+            selected={isEqual(tile.position, selected[1]?.position)}
+            src={tile.src}
+            color={tile.color}
+            position={tile.position}
             onClick={setSelected}/>
         </div>) }
       </div>
@@ -201,12 +207,6 @@ x % 2 === 0 ?
       colors.dark[0])
 
 
-/* type TileType = {
-    color: string
-    position: { x: number, y: number }
-    src: null | string
-    size?: number
-} */
 
 async function canStep(first: TileType, target: TileType): Promise<boolean> {
   const piece = first.src?.split("./pieces/")[1].split(".png")[0]
