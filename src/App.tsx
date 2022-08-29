@@ -118,12 +118,7 @@ function App(): JSX.Element {
     animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : 'rgb(17, 24, 39)' }}
     transition={{ duration: .3 }}
     >
-      <button className='absolute top-8 left-8 z-10 w-8 aspect-square bg-black' 
-        onClick={() => {
-          setTiles(history.current[0])
-          console.log(history)
-        }}
-      />
+      
       <div 
         onClick={() => setTheme(theme === -1 ? 1 : -1)}
         className='absolute w-12 h-12 right-24 top-12 flex
