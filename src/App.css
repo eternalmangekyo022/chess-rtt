@@ -4,7 +4,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+body {
+  overflow: hidden;
+}
 
-::selection {
+:not(span)::selection {
   outline: none;
 }
