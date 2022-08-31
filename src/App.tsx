@@ -3,8 +3,8 @@ import { atom, useAtom } from 'jotai';
 import { isEqual } from 'lodash';
 import { useCallback, useEffect, useRef, useState } from "react";
 import './App.css';
-import Tile, { TileType } from './components/Tile';
 import Modal from './components/Modal';
+import Tile, { TileType } from './components/Tile';
 
 
 import BishopBlack from './pieces/bishop-black.png';
@@ -66,7 +66,6 @@ function App(): JSX.Element {
     
   }, [])
 
-
   useEffect(() => {
     if (tiles.length < 64) return
     const temp = [...tiles];
@@ -84,6 +83,10 @@ function App(): JSX.Element {
         shouldRender.current = false;
         return
       } else if (selected[0]?.src && selected[1]?.position) /* piece moves */ {
+        if(!canStep(selected[0] as firstType, selected[1])) {
+          setSelected(null)
+          return
+        }
         const temp = [...tiles]
         for (let i = 0; i < temp.length; i++) {
           if (isEqual(temp[i].position, selected[1]?.position)) {
@@ -94,10 +97,10 @@ function App(): JSX.Element {
             break
           }
         }
-        setTiles(temp)
+        setTiles(temp);
         history.current.push(temp)
-        /* console.log(`${sizeOf(test.current) / (1024 * 1024)} MB`) */
         setSelected(null)
+        /* console.log(`${sizeOf(test.current) / (1024 * 1024)} MB`) */
       }
       return
     }
@@ -222,15 +225,42 @@ async function getColor(__theme: number, { x, y }: position): Promise<string> {
       colors.dark[0])
 }
 
-
-async function canStep(first: TileType, target: TileType): Promise<boolean> {
-  const piece = first.src?.split("./pieces/")[1].split(".png")[0]
-  console.log(piece) // eg. white-knight
-  if (first.src === "") {
-
+interface firstType extends TileType {
+  src: string
+}
+function canStep(first: firstType, target: TileType): boolean {
+  const _first = {
+    color: first.src.includes('black') ? 'black' : 'white'
   }
 
-  return false
+  const _target = {
+    color: target.src ? (target.src.includes('black') ? 'black' : 'white') : null,
+  }
+
+  if((_first.color === _target.color) || (target?.src?.includes('king')) || (first.src.includes('pawn') && ((target.position.x !== first.position.x && !target.src) || (
+    (_first.color === 'white') ? 
+
+    (/*if pawn is white*/ 
+      (!target.src ? ((target.position.y < first.position.y) ? ((first.position.y === 6) ? (
+        target.position.y < first.position.y - 2) : (target.position.y + 1 < first.position.y)
+        ): true
+      ): target.position.x === first.position.x)
+    )
+    
+    : (/* pawn is black */
+    (target.position.y > first.position.y) ? 
+    (first.position.y === 1 ? 
+      (first.position.y + 2 < target.position.y) : (first.position.y + 1 < target.position.y)
+    ) 
+    : true))))) return false
+  
+
+
+  /* const piece = first.src?.split("./pieces/")[1].split(".png")[0]
+  console.log(piece) // eg. white-knight */
+  
+
+  return true
 }
 
 /* async function addUser({ name, password }: { name: string, password: string }): Promise<void> {
