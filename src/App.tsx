@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { atom, useAtom } from 'jotai';
-import _, { isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import { useCallback, useEffect, useRef, useState } from "react";
 import './App.css';
 import Modal from './components/Modal';
@@ -25,11 +24,6 @@ import RookWhite from './pieces/rook-white.png';
 const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] }
 const animationDistance = -70;
 const now = new Date().getHours()
-const _theme = atom<1 /* light */ | -1 /* dark */>((now < 7 || now >= 19) ? -1 : 1)
-/* const defaultBoard = resetBoard((now < 7 || now >= 19) ? -1 : 1) */
-
-
-export { _theme };
 
 const typeSizes = {
   "bigint": () => 0,
@@ -58,7 +52,7 @@ function App(): JSX.Element {
   const setSelected = useCallback((val: TileType | null) => {
     _setSelected(val)
   }, [])
-  const [theme, setTheme] = useAtom(_theme)
+  const [theme, setTheme] = useState<1 | -1>((now < 7 || now >= 19) ? -1 : 1);
 
   useEffect(() => {
     resetBoard(theme)
@@ -120,26 +114,27 @@ function App(): JSX.Element {
       animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : '#3F4E4F' }}
       transition={{ duration: .3 }}
     >
-      <AnimatePresence>
-        <motion.button /* starter/stopper button */
-          key={theme}
-          initial={{ x: theme * -50 }}
-          animate={{ x: 0 }}
-          exit={{ x: theme * -50, opacity: 0 }}
+      <div className='absolute w-full h-10 top-10 flex justify-center items-center'>
+        <AnimatePresence mode='popLayout'>
+          <motion.button /* starter/stopper button */
+            key={theme}
+            initial={{ x: theme * -50 }}
+            animate={{ x: 0 }}
+            exit={{ x: theme * -50, opacity: 0 }}
+            className='w-10 h-10'
+            onClick={() => {
+              if(started) {
+                setModalOpen(true)
+                return
+              }
+              setStarted(prev => !prev)
+            }}
+          >
+            { theme === 1 ? <span className='w-10 aspect-square text-4xl'>{ started ? '⏹️' : '▶️' }</span> : <img className='w-10 aspect-square' src={started ? 'https://www.svgrepo.com/show/13614/stop-button.svg' : 'https://www.svgrepo.com/show/61248/play-button.svg' }/>}
+          </motion.button>
 
-          className='absolute w-10 h-10 top-10 left-1/2 -translate-x-1/2' 
-          onClick={() => {
-            if(started) {
-              setModalOpen(true)
-              return
-            }
-            setStarted(prev => !prev)
-          }}
-        >
-          { theme === 1 ? <div className='w-10 aspect-square text-4xl'>{ started ? '⏹️' : '▶️' }</div> : <img className='w-10 aspect-square' src={started ? 'https://www.svgrepo.com/show/13614/stop-button.svg' : 'https://www.svgrepo.com/show/61248/play-button.svg' }/>}
-        </motion.button>
-
-      </AnimatePresence>
+        </AnimatePresence>
+      </div>
       <div
         onClick={() => setTheme(theme === -1 ? 1 : -1)}
         className='absolute w-12 h-12 right-[15%] top-8 flex justify-center items-center cursor-pointer' /* container for animation */>
@@ -166,18 +161,24 @@ function App(): JSX.Element {
               onClick={setSelected} />
           </div>)}
       </div>
-      <Modal shadow flex open={modalOpen} close={() => setModalOpen(false)}>
+      <Modal shadow flex open={modalOpen} close={() => setModalOpen(false)} theme={theme}>
         <span className='absolute left-1/2 -translate-x-[50%] top-[20%]'>Reset board and counter?</span>
-        <img
-          src='https://www.svgrepo.com/show/384403/accept-check-good-mark-ok-tick.svg'
-          onClick={async() => {
-            setTiles(await resetBoard(theme))
-            setStarted(false)
-            setModalOpen(false)
-          }}
-          draggable={false}
-          className='absolute bottom-6 right-6 w-[10%] aspect-square cursor-pointer'
-        />
+        <div 
+          className='absolute bottom-6 right-6 w-[10%] aspect-square cursor-pointer flex justify-center items-center'
+        >
+          <div className='bg-white w-[90%] aspect-square rounded-full'></div>
+          <img
+            className='absolute w-[110%] aspect-square'
+            src='https://www.svgrepo.com/show/384403/accept-check-good-mark-ok-tick.svg'
+            onClick={async() => {
+              setTiles(await resetBoard(theme))
+              setStarted(false)
+              setModalOpen(false)
+            }}
+            draggable={false}
+          />
+
+        </div>
         <img
           src='https://www.svgrepo.com/show/286637/cancel-close.svg'
           draggable={false}
@@ -246,6 +247,10 @@ interface firstType extends TileType {
   src: string
 }
 function canStep(first: firstType, target: TileType): boolean {
+  /* pawns done, cant take king */
+  /** TODO
+   * bishop, queen, knight, rook, king
+  */
   const _first = {
     color: first.src.includes('black') ? 'black' : 'white'
   }
