@@ -54,6 +54,7 @@ function App(): JSX.Element {
   const shouldRender = useRef<boolean>(true);
   const [tiles, setTiles] = useState<TileType[]>([]);
   const [selected, _setSelected] = usePrevious<TileType | null>(null);
+  const [started, setStarted] = useState<boolean>(false);
   const setSelected = useCallback((val: TileType | null) => {
     _setSelected(val)
   }, [])
@@ -62,8 +63,13 @@ function App(): JSX.Element {
   useEffect(() => {
     resetBoard(theme)
       .then(res => { setTiles(res); history.current.push(res) })
-    
-  }, [])
+    }, [])
+
+  useEffect(() => {
+    (async () => {
+      started ? null : setTiles(await resetBoard(theme))
+    })()
+  }, [started])
 
   useEffect(() => {
     if (tiles.length < 64) return
@@ -76,6 +82,7 @@ function App(): JSX.Element {
   }, [theme])
 
   useEffect(() => {
+    if(!started) return
     if (shouldRender.current) {
       if (isEqual(selected[0]?.position, selected[1]?.position)) {
         setSelected(null)
@@ -106,23 +113,33 @@ function App(): JSX.Element {
     shouldRender.current = true
     /* console.log(selected[0]?.position, selected[1]?.position) */
   }, [selected])
-
+  
   return <>
     <motion.div
       className={`relative w-screen h-screen flex justify-center items-center`}
       animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : '#3F4E4F' }}
       transition={{ duration: .3 }}
     >
-      <motion.button
-        initial={{ x: -100 }}
-        animate={{ x: 0 }}
-        transition={{ delay: .3 }}
-        className={`absolute top-8 left-8 cursor-pointer rounded-sm z-10 w-8 text-4xl aspect-square`}
-        onClick={() => {
-          setModalOpen(true);
-        }}
-        children='⚠️'
-      />
+      <AnimatePresence>
+        <motion.button /* starter/stopper button */
+          key={theme}
+          initial={{ x: theme * -50 }}
+          animate={{ x: 0 }}
+          exit={{ x: theme * -50, opacity: 0 }}
+
+          className='absolute w-10 h-10 top-10 left-1/2 -translate-x-1/2' 
+          onClick={() => {
+            if(started) {
+              setModalOpen(true)
+              return
+            }
+            setStarted(prev => !prev)
+          }}
+        >
+          { theme === 1 ? <div className='w-10 aspect-square text-4xl'>{ started ? '⏹️' : '▶️' }</div> : <img className='w-10 aspect-square' src={started ? 'https://www.svgrepo.com/show/13614/stop-button.svg' : 'https://www.svgrepo.com/show/61248/play-button.svg' }/>}
+        </motion.button>
+
+      </AnimatePresence>
       <div
         onClick={() => setTheme(theme === -1 ? 1 : -1)}
         className='absolute w-12 h-12 right-[15%] top-8 flex justify-center items-center cursor-pointer' /* container for animation */>
@@ -150,11 +167,12 @@ function App(): JSX.Element {
           </div>)}
       </div>
       <Modal shadow flex open={modalOpen} close={() => setModalOpen(false)}>
-        <span className='absolute left-1/2 -translate-x-[50%] top-[20%]'>Reset board?</span>
+        <span className='absolute left-1/2 -translate-x-[50%] top-[20%]'>Reset board and counter?</span>
         <img
           src='https://www.svgrepo.com/show/384403/accept-check-good-mark-ok-tick.svg'
           onClick={async() => {
             setTiles(await resetBoard(theme))
+            setStarted(false)
             setModalOpen(false)
           }}
           draggable={false}
