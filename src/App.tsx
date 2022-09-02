@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { atom, useAtom } from 'jotai';
-import { isEqual } from 'lodash';
+import _, { isEqual } from 'lodash';
 import { useCallback, useEffect, useRef, useState } from "react";
 import './App.css';
 import Modal from './components/Modal';
@@ -54,7 +54,6 @@ function App(): JSX.Element {
   const shouldRender = useRef<boolean>(true);
   const [tiles, setTiles] = useState<TileType[]>([]);
   const [selected, _setSelected] = usePrevious<TileType | null>(null);
-  const [test, setTest] = useState<null | string>(null);
   const setSelected = useCallback((val: TileType | null) => {
     _setSelected(val)
   }, [])
@@ -248,12 +247,12 @@ function canStep(first: firstType, target: TileType): boolean {
     )
     
     : (/* pawn is black */
-    (target.position.y > first.position.y) ? 
-    (first.position.y === 1 ? 
-      (first.position.y + 2 < target.position.y) : (first.position.y + 1 < target.position.y)
-    ) 
-    : true))))) return false
-  
+      (!target.src ? ((target.position.y > first.position.y) ? ((first.position.y === 1) ? (
+        target.position.y > first.position.y + 2) : (target.position.y - 1 > first.position.y)
+        ): true
+      ): target.position.x === first.position.x)
+    )
+    )))) return false
 
 
   /* const piece = first.src?.split("./pieces/")[1].split(".png")[0]
@@ -310,13 +309,13 @@ function usePrevious<T>(initial: T | null): [[null | T, null | T], (val: T) => v
 async function resetBoard(theme: 1 | -1): Promise<TileType[]> {
   const temp: TileType[] = [];
   try {
-    for(let y = 0; y < 8; y++) {
-        for(let x = 0; x < 8; x++) {
+    for(let x = 0; x < 8; x++) {
+        for(let y = 0; y < 8; y++) {
           temp.push({
-            color: await getColor(theme, { x, y }),
-            position: { x, y },
+            color: await getColor(theme, { x: y, y: x }),
+            position: { x: y, y: x },
             selected: false,
-            src: await getPiece({ x: y, y: x })
+            src: await getPiece({ x, y })
           })
         }
       }
