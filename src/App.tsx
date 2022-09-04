@@ -27,7 +27,7 @@ import RookWhite from './pieces/rook-white.png';
  * move: black.then(white.then(black.then(white)))
 */
 const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] };
-const animationDistance = -70;
+const animationDistance = (): number => window.innerWidth < 440 ? -60 : -75;
 const now = new Date().getHours();
 
 /* const typeSizes = {
@@ -58,7 +58,6 @@ function App(): JSX.Element {
         _setSelected(val);
     }, []);
     const [theme, setTheme] = useState<1 | -1>((now < 7 || now >= 19) ? -1 : 1);
-    const ref = useRef();
 
     useEffect(() => {
         resetBoard(theme)
@@ -115,7 +114,6 @@ function App(): JSX.Element {
     }, [selected]);
 
     return <>
-
         <motion.div
             className={'relative w-screen h-screen flex justify-center items-center'}
             animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : '#3F4E4F' }}
@@ -150,15 +148,15 @@ function App(): JSX.Element {
                     <motion.div
                         className='w-12 absolute text-5xl'
                         key={theme}
-                        initial={{ x: theme * animationDistance }}
+                        initial={{ x: theme * animationDistance() }}
                         animate={{ x: 0 }}
-                        exit={{ x: theme * animationDistance, opacity: 0 }}
+                        exit={{ x: theme * animationDistance(), opacity: 0 }}
                     >
                         {theme === 1 ? <span>🌅</span> : <span>🌃</span>}
                     </motion.div>
                 </AnimatePresence>
             </div>
-            <div className='relative min-w-[10rem] max-w-[50rem] w-full aspect-square' /* board: 240x240*/>
+            <div className='relative min-w-[10rem] max-w-[45rem] w-full aspect-square' /* board: 240x240*/>
                 {tiles.map((tile, i) =>
                     <div key={i}>
                         <Tile
@@ -263,7 +261,7 @@ function canStep(first: firstType, target: TileType): boolean {
     const _first = {
         color: first.src.includes('black') ? 'black' : 'white'
     };
-
+    
     const _target = {
         color: target.src ? (target.src.includes('black') ? 'black' : 'white') : null,
     };
@@ -306,21 +304,19 @@ function canStep(first: firstType, target: TileType): boolean {
     }
     return true;
 
-
-
     /* const piece = first.src?.split("./pieces/")[1].split(".png")[0]
   console.log(piece) // eg. white-knight */
 
 }
 
 /* async function addUser({ name, password }: { name: string, password: string }): Promise<void> {
-  try {
-    const res = await fetch(`https://europe-west1.gcp.data.mongodb-api.com/app/chess4life-ffndx/endpoint/users/add?name=${name}&password=${password}`, {
-      method: 'POST',
-    })
-  } catch(e) {
-    console.error(e)
-  }
+    try {
+        const res = await fetch(`https://europe-west1.gcp.data.mongodb-api.com/app/chess4life-ffndx/endpoint/users/add?name=${name}&password=${password}`, {
+            method: 'POST',
+        });
+    } catch(e) {
+        console.error(e);
+    }
 } */
 
 // hooks
@@ -348,13 +344,13 @@ function usePrevious<T>(initial: T | null): [[null | T, null | T], (val: T) => v
  * toggleWeather() -> 'sunny'
 */
 /* function useToggle<T=string | number | boolean>(initial: [T, T]): [T, () => void] {
-  const [state, setState] = useState<T>(initial[0]);
+    const [state, setState] = useState<T>(initial[0]);
  
-  function toggle(): void {
-    setState(prev => prev === initial[0] ? initial[1] : initial[0])
-  }
+    function toggle(): void {
+        setState(prev => prev === initial[0] ? initial[1] : initial[0]);
+    }
  
-  return [state, toggle]
+    return [state, toggle];
 } */
 
 async function resetBoard(theme: 1 | -1): Promise<TileType[]> {
