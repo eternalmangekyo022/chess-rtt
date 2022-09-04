@@ -1,10 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { isEqual } from 'lodash';
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import './App.css';
 import Modal from './components/Modal';
 import Tile, { TileType } from './components/Tile';
-
 
 import BishopBlack from './pieces/bishop-black.png';
 import KingBlack from './pieces/king-black.png';
@@ -21,6 +20,12 @@ import QueenWhite from './pieces/queen-white.png';
 import RookWhite from './pieces/rook-white.png';
 
 
+/**
+ * TODO
+ * counter
+ * remaining piece logic
+ * move: black.then(white.then(black.then(white)))
+*/
 const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] }
 const animationDistance = -70;
 const now = new Date().getHours()
@@ -47,8 +52,8 @@ function App(): JSX.Element {
   const history = useRef<TileType[][]>([])
   const shouldRender = useRef<boolean>(true);
   const [tiles, setTiles] = useState<TileType[]>([]);
-  const [selected, _setSelected] = usePrevious<TileType | null>(null);
   const [started, setStarted] = useState<boolean>(false);
+  const [selected, _setSelected] = usePrevious<TileType | null>(null);
   const setSelected = useCallback((val: TileType | null) => {
     _setSelected(val)
   }, [])
@@ -57,12 +62,13 @@ function App(): JSX.Element {
   useEffect(() => {
     resetBoard(theme)
       .then(res => { setTiles(res); history.current.push(res) })
-    }, [])
+  }, [])
 
   useEffect(() => {
     (async () => {
       started ? null : setTiles(await resetBoard(theme))
     })()
+    if (started) { }
   }, [started])
 
   useEffect(() => {
@@ -76,14 +82,14 @@ function App(): JSX.Element {
   }, [theme])
 
   useEffect(() => {
-    if(!started) return
+    if (!started) { setStarted(true); /* start timer */ }
     if (shouldRender.current) {
       if (isEqual(selected[0]?.position, selected[1]?.position)) {
         setSelected(null)
         shouldRender.current = false;
         return
       } else if (selected[0]?.src && selected[1]?.position) /* piece moves */ {
-        if(!canStep(selected[0] as firstType, selected[1])) {
+        if (!canStep(selected[0] as firstType, selected[1])) {
           setSelected(null)
           return
         }
@@ -107,30 +113,32 @@ function App(): JSX.Element {
     shouldRender.current = true
     /* console.log(selected[0]?.position, selected[1]?.position) */
   }, [selected])
-  
+
   return <>
+
     <motion.div
       className={`relative w-screen h-screen flex justify-center items-center`}
       animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : '#3F4E4F' }}
       transition={{ duration: .3 }}
     >
       <div className='absolute w-full h-10 top-10 flex justify-center items-center'>
-        <AnimatePresence mode='popLayout'>
+        <AnimatePresence mode='wait'>
           <motion.button /* starter/stopper button */
             key={theme}
-            initial={{ x: theme * -50 }}
-            animate={{ x: 0 }}
-            exit={{ x: theme * -50, opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className='w-10 h-10'
+            transition={{ delay: .05 }}
             onClick={() => {
-              if(started) {
+              if (started) {
                 setModalOpen(true)
                 return
               }
               setStarted(prev => !prev)
             }}
           >
-            { theme === 1 ? <span className='w-10 aspect-square text-4xl'>{ started ? '⏹️' : '▶️' }</span> : <img className='w-10 aspect-square' src={started ? 'https://www.svgrepo.com/show/13614/stop-button.svg' : 'https://www.svgrepo.com/show/61248/play-button.svg' }/>}
+            {theme === 1 ? <span className='w-10 aspect-square text-4xl'>{started ? '⏹️' : '▶️'}</span> : <img className='w-10 aspect-square' src={started ? 'https://www.svgrepo.com/show/13614/stop-button.svg' : 'https://www.svgrepo.com/show/61248/play-button.svg'} />}
           </motion.button>
 
         </AnimatePresence>
@@ -163,14 +171,14 @@ function App(): JSX.Element {
       </div>
       <Modal shadow flex open={modalOpen} close={() => setModalOpen(false)} theme={theme}>
         <span className='absolute left-1/2 -translate-x-[50%] top-[20%]'>Reset board and counter?</span>
-        <div 
+        <div
           className='absolute bottom-6 right-6 w-[10%] aspect-square cursor-pointer flex justify-center items-center'
         >
           <div className='bg-white w-[90%] aspect-square rounded-full'></div>
           <img
             className='absolute w-[110%] aspect-square'
             src='https://www.svgrepo.com/show/384403/accept-check-good-mark-ok-tick.svg'
-            onClick={async() => {
+            onClick={async () => {
               setTiles(await resetBoard(theme))
               setStarted(false)
               setModalOpen(false)
@@ -182,7 +190,7 @@ function App(): JSX.Element {
         <img
           src='https://www.svgrepo.com/show/286637/cancel-close.svg'
           draggable={false}
-          onClick={async() => {
+          onClick={async () => {
             setModalOpen(false)
           }}
           className='absolute bottom-6 left-6 w-[10%] aspect-square cursor-pointer'
@@ -225,28 +233,29 @@ async function getPiece({ x, y }: position): Promise<string | null> {
 
 async function getColor(__theme: number, { x, y }: position): Promise<string> {
   return __theme === 1 ?
-  /* light theme */
-  x % 2 === 0 ?
-    (y % 2 === 0 ?
-      colors.light[0] :
-      colors.light[1])
-    : (y % 2 === 0 ?
-      colors.light[1] :
-      colors.light[0]) :
-  /* non-light theme */
-  x % 2 === 0 ?
-    (y % 2 === 0 ?
-      colors.dark[0] :
-      colors.dark[1]) :
-    (y % 2 === 0 ?
-      colors.dark[1] :
-      colors.dark[0])
+    /* light theme */
+    x % 2 === 0 ?
+      (y % 2 === 0 ?
+        colors.light[0] :
+        colors.light[1])
+      : (y % 2 === 0 ?
+        colors.light[1] :
+        colors.light[0]) :
+    /* non-light theme */
+    x % 2 === 0 ?
+      (y % 2 === 0 ?
+        colors.dark[0] :
+        colors.dark[1]) :
+      (y % 2 === 0 ?
+        colors.dark[1] :
+        colors.dark[0])
 }
 
 interface firstType extends TileType {
   src: string
 }
 function canStep(first: firstType, target: TileType): boolean {
+  const [tx, ty, fx, fy] = [target.position.x, target.position.y, first.position.x, first.position.y]
   /* pawns done, cant take king */
   /** TODO
    * bishop, queen, knight, rook, king
@@ -259,30 +268,49 @@ function canStep(first: firstType, target: TileType): boolean {
     color: target.src ? (target.src.includes('black') ? 'black' : 'white') : null,
   }
 
-  if((_first.color === _target.color) || (target?.src?.includes('king')) || (first.src.includes('pawn') && ((target.position.x !== first.position.x && !target.src) || (
-    (_first.color === 'white') ? 
+  if ((_first.color === _target.color) || (target?.src?.includes('king'))) return false
 
-    (/*if pawn is white*/ 
-      (!target.src ? ((target.position.y < first.position.y) ? ((first.position.y === 6) ? (
-        target.position.y < first.position.y - 2) : (target.position.y + 1 < first.position.y)
-        ): true
-      ): target.position.x === first.position.x)
-    )
-    
-    : (/* pawn is black */
-      (!target.src ? ((target.position.y > first.position.y) ? ((first.position.y === 1) ? (
-        target.position.y > first.position.y + 2) : (target.position.y - 1 > first.position.y)
-        ): true
-      ): target.position.x === first.position.x)
-    )
-    )))) return false
+
+  if (first.src.includes('pawn')) {
+    if (tx !== fx && !target.src) return false
+    if (_first.color === 'white') {
+      if (!target.src) {
+        if (ty < fy) {
+          if (fy === 6) {
+            if (ty < fy - 2) return false
+          } else {
+            if (ty + 1 < fy) return false
+          }
+        } else {
+          return false
+        }
+      } else {
+        if (tx === fx || (tx != fx && ty === fy) || ty > fy) return false
+      }
+    } else /* pawn black */ {
+      if (tx !== fx && !target.src) return false
+      if (!target.src) {
+        if (ty > fy) {
+          if (fy === 1) {
+            if (ty > fy + 2) return false
+          } else {
+            if (ty - 1 > fy) return false
+          }
+        } else {
+          return false
+        }
+      } else {
+        if (tx === fx || (tx != fx && ty === fy) || ty < fy) return false
+      }
+    }
+  }
+  return true
+
 
 
   /* const piece = first.src?.split("./pieces/")[1].split(".png")[0]
   console.log(piece) // eg. white-knight */
-  
 
-  return true
 }
 
 /* async function addUser({ name, password }: { name: string, password: string }): Promise<void> {
@@ -321,30 +349,32 @@ function usePrevious<T>(initial: T | null): [[null | T, null | T], (val: T) => v
 */
 /* function useToggle<T=string | number | boolean>(initial: [T, T]): [T, () => void] {
   const [state, setState] = useState<T>(initial[0]);
-
+ 
   function toggle(): void {
     setState(prev => prev === initial[0] ? initial[1] : initial[0])
   }
-
+ 
   return [state, toggle]
 } */
 
 async function resetBoard(theme: 1 | -1): Promise<TileType[]> {
   const temp: TileType[] = [];
   try {
-    for(let x = 0; x < 8; x++) {
-        for(let y = 0; y < 8; y++) {
-          temp.push({
-            color: await getColor(theme, { x: y, y: x }),
-            position: { x: y, y: x },
-            selected: false,
-            src: await getPiece({ x, y })
-          })
-        }
+    for (let x = 0; x < 8; x++) {
+      for (let y = 0; y < 8; y++) {
+        temp.push({
+          color: await getColor(theme, { x: y, y: x }),
+          position: { x: y, y: x },
+          selected: false,
+          src: await getPiece({ x, y })
+        })
       }
+    }
     return temp as TileType[]
-  } catch(e) {
+  } catch (e) {
     throw new Error(`Something happened in getDefault(): ${e}`)
   }
 }
+
+
 export default App
