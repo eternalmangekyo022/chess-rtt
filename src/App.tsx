@@ -116,7 +116,7 @@ function App(): JSX.Element {
     return <>
         <motion.div
             className={'relative w-screen h-screen flex justify-center items-center'}
-            animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : '#3F4E4F' }}
+            animate={{ backgroundColor: theme === 1 ? 'rgb(254, 215, 170)' : '#1c4648' }}
             transition={{ duration: .3 }}
         >
             <div className='absolute w-full h-10 top-10 flex justify-center items-center'>
