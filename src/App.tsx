@@ -309,16 +309,6 @@ function canStep(first: firstType, target: TileType): boolean {
 
 }
 
-/* async function addUser({ name, password }: { name: string, password: string }): Promise<void> {
-    try {
-        const res = await fetch(`https://europe-west1.gcp.data.mongodb-api.com/app/chess4life-ffndx/endpoint/users/add?name=${name}&password=${password}`, {
-            method: 'POST',
-        });
-    } catch(e) {
-        console.error(e);
-    }
-} */
-
 // hooks
 /**
  * 
