@@ -30,20 +30,6 @@ const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] };
 const animationDistance = (): number => window.innerWidth < 440 ? -60 : -75;
 const now = new Date().getHours();
 
-/* const typeSizes = {
-    'bigint': () => 0,
-    'symbol': () => 0,
-    'function': () => 0,
-    'undefined': () => 0,
-    'boolean': () => 4,
-    'number': () => 8,
-    'string': (item: string) => 2 * item.length,
-    'object': (item: { [key: string]: any }): number => !item ? 0 : Object
-        .keys(item)
-        .reduce((total, key) => sizeOf(key) + sizeOf(item[key]) + total, 0)
-};
-
-function sizeOf(value: any): number { return typeSizes[typeof value](value); } */
 type position = TileType['position']
 
 
