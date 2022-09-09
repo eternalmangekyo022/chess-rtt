@@ -110,7 +110,7 @@ function App(): JSX.Element {
             return;
         }
         shouldRender.current = true;
-    /* console.log(selected[0]?.position, selected[1]?.position) */
+        /* console.log(selected[0]?.position, selected[1]?.position) */
     }, [selected]);
 
     return <>
@@ -229,28 +229,10 @@ async function getPiece({ x, y }: position): Promise<string | null> {
     return null;
 }
 
-async function getColor(__theme: number, { x, y }: position): Promise<string> {
-    return __theme === 1 ?
-    /* light theme */
-        x % 2 === 0 ?
-            (y % 2 === 0 ?
-                colors.light[0] :
-                colors.light[1])
-            : (y % 2 === 0 ?
-                colors.light[1] :
-                colors.light[0]) :
-    /* non-light theme */
-        x % 2 === 0 ?
-            (y % 2 === 0 ?
-                colors.dark[0] :
-                colors.dark[1]) :
-            (y % 2 === 0 ?
-                colors.dark[1] :
-                colors.dark[0]);
-}
+const getColor = async (__theme: number, { x, y }: position): Promise<string> => (x + y) % 2 === 0 ? colors[__theme === 1 ? 'light' : 'dark'][0] : colors[__theme === 1 ? 'light' : 'dark'][1];
 
 interface firstType extends TileType {
-  src: string
+    src: string
 }
 function canStep(first: firstType, target: TileType): boolean {
     const [tx, ty, fx, fy] = [target.position.x, target.position.y, first.position.x, first.position.y];
@@ -261,7 +243,7 @@ function canStep(first: firstType, target: TileType): boolean {
     const _first = {
         color: first.src.includes('black') ? 'black' : 'white'
     };
-    
+
     const _target = {
         color: target.src ? (target.src.includes('black') ? 'black' : 'white') : null,
     };
