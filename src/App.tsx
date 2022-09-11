@@ -30,20 +30,6 @@ const colors = { light: ['#EDEED1', '#7FA650'], dark: ['#70798C', '#2B303A'] };
 const animationDistance = (): number => window.innerWidth < 440 ? -60 : -75;
 const now = new Date().getHours();
 
-/* const typeSizes = {
-    'bigint': () => 0,
-    'symbol': () => 0,
-    'function': () => 0,
-    'undefined': () => 0,
-    'boolean': () => 4,
-    'number': () => 8,
-    'string': (item: string) => 2 * item.length,
-    'object': (item: { [key: string]: any }): number => !item ? 0 : Object
-        .keys(item)
-        .reduce((total, key) => sizeOf(key) + sizeOf(item[key]) + total, 0)
-};
-
-function sizeOf(value: any): number { return typeSizes[typeof value](value); } */
 type position = TileType['position']
 
 
@@ -88,7 +74,7 @@ function App(): JSX.Element {
                 shouldRender.current = false;
                 return;
             } else if (selected[0]?.src && selected[1]?.position) /* piece moves */ {
-                if (!canStep(selected[0] as firstType, selected[1])) {
+                if (!canStep(selected[0] as firstType, selected[1], tiles)) {
                     setSelected(null);
                     return;
                 }
@@ -110,7 +96,7 @@ function App(): JSX.Element {
             return;
         }
         shouldRender.current = true;
-    /* console.log(selected[0]?.position, selected[1]?.position) */
+        /* console.log(selected[0]?.position, selected[1]?.position) */
     }, [selected]);
 
     return <>
@@ -208,7 +194,6 @@ function App(): JSX.Element {
  * ```
 */
 async function getPiece({ x, y }: position): Promise<string | null> {
-
     if (x === 1 || x === 6) /* pawn */ {
         return x === 1 ? PawnBlack : PawnWhite;
     }
@@ -229,39 +214,24 @@ async function getPiece({ x, y }: position): Promise<string | null> {
     return null;
 }
 
-async function getColor(__theme: number, { x, y }: position): Promise<string> {
-    return __theme === 1 ?
-    /* light theme */
-        x % 2 === 0 ?
-            (y % 2 === 0 ?
-                colors.light[0] :
-                colors.light[1])
-            : (y % 2 === 0 ?
-                colors.light[1] :
-                colors.light[0]) :
-    /* non-light theme */
-        x % 2 === 0 ?
-            (y % 2 === 0 ?
-                colors.dark[0] :
-                colors.dark[1]) :
-            (y % 2 === 0 ?
-                colors.dark[1] :
-                colors.dark[0]);
-}
+const getColor = async (__theme: number, { x, y }: position): Promise<string> => (x + y) % 2 === 0 ? colors[__theme === 1 ? 'light' : 'dark'][0] : colors[__theme === 1 ? 'light' : 'dark'][1];
 
 interface firstType extends TileType {
-  src: string
+    src: string
 }
-function canStep(first: firstType, target: TileType): boolean {
+function canStep(first: firstType, target: TileType, tiles: TileType[]): boolean {
     const [tx, ty, fx, fy] = [target.position.x, target.position.y, first.position.x, first.position.y];
     /* pawns done, cant take king */
     /** TODO
    * bishop, queen, knight, rook, king
   */
+
+    const pieceByPos = ({ x, y }: position): TileType => tiles.find(i => i.position.x === x && i.position.y === y) as TileType;
+
     const _first = {
         color: first.src.includes('black') ? 'black' : 'white'
     };
-    
+
     const _target = {
         color: target.src ? (target.src.includes('black') ? 'black' : 'white') : null,
     };
@@ -275,7 +245,7 @@ function canStep(first: firstType, target: TileType): boolean {
             if (!target.src) {
                 if (ty < fy) {
                     if (fy === 6) {
-                        if (ty < fy - 2) return false;
+                        if (ty < fy - 2 || pieceByPos({ x: tx, y: 5 }).src) return false;
                     } else {
                         if (ty + 1 < fy) return false;
                     }
