@@ -74,7 +74,7 @@ function App(): JSX.Element {
                 shouldRender.current = false;
                 return;
             } else if (selected[0]?.src && selected[1]?.position) /* piece moves */ {
-                if (!canStep(selected[0] as firstType, selected[1])) {
+                if (!canStep(selected[0] as firstType, selected[1], tiles)) {
                     setSelected(null);
                     return;
                 }
@@ -194,7 +194,6 @@ function App(): JSX.Element {
  * ```
 */
 async function getPiece({ x, y }: position): Promise<string | null> {
-
     if (x === 1 || x === 6) /* pawn */ {
         return x === 1 ? PawnBlack : PawnWhite;
     }
@@ -220,12 +219,15 @@ const getColor = async (__theme: number, { x, y }: position): Promise<string> =>
 interface firstType extends TileType {
     src: string
 }
-function canStep(first: firstType, target: TileType): boolean {
+function canStep(first: firstType, target: TileType, tiles: TileType[]): boolean {
     const [tx, ty, fx, fy] = [target.position.x, target.position.y, first.position.x, first.position.y];
     /* pawns done, cant take king */
     /** TODO
    * bishop, queen, knight, rook, king
   */
+
+    const pieceByPos = ({ x, y }: position): TileType => tiles.find(i => i.position.x === x && i.position.y === y) as TileType;
+
     const _first = {
         color: first.src.includes('black') ? 'black' : 'white'
     };
@@ -243,7 +245,7 @@ function canStep(first: firstType, target: TileType): boolean {
             if (!target.src) {
                 if (ty < fy) {
                     if (fy === 6) {
-                        if (ty < fy - 2) return false;
+                        if (ty < fy - 2 || pieceByPos({ x: tx, y: 5 }).src) return false;
                     } else {
                         if (ty + 1 < fy) return false;
                     }
